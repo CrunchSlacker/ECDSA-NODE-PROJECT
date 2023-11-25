@@ -22,21 +22,22 @@ app.get("/balance/:address", (req, res) => {
 
 app.post("/send", (req, res) => {
     const { sender, recipient, amount, signature, msg } = req.body;
-    
+
     let reconstructedMsg = new Uint8Array(Object.values(msg));
 
-    verify(signature, reconstructedMsg);
+    if (verify(signature, reconstructedMsg)) {
+        setInitialBalance(sender);
+        setInitialBalance(recipient);
 
-    setInitialBalance(sender);
-    setInitialBalance(recipient);
-
-    if (balances[sender] < amount) {
-        res.status(400).send({ message: "Not enough funds!" });
-    } else {
-        balances[sender] -= amount;
-        balances[recipient] += amount;
-        res.send({ balance: balances[sender] });
+        if (balances[sender] < amount) {
+            res.status(400).send({ message: "Not enough funds!" });
+        } else {
+            balances[sender] -= amount;
+            balances[recipient] += amount;
+            res.send({ balance: balances[sender] });
+        };
     }
+    
 });
 
 app.listen(port, () => {
